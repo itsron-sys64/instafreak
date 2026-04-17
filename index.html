@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FuReelina — Your Reel Sharing Archon</title>
+  <meta name="description" content="FuReelina — the grand Discord bot that embeds Instagram Reels in your server with theatrical flair." />
+  <link rel="icon" href="images/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Animated background layers -->
+  <div class="bg-layer bg-overlay"></div>
+  <div class="bg-layer bg-stars"></div>
+  <div class="bubbles">
+    <span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-left">
+      <img src="images/logo.png" alt="FuReelina logo" class="nav-logo" />
+      <span class="nav-title">FuReelina</span>
+    </div>
+
+    <nav class="nav-links" id="navLinks">
+      <a href="#about">About</a>
+      <a href="#features">Features</a>
+      <a href="#quotes">Quotes</a>
+      <a href="docs.html" target="_blank">Documentation</a>
+      <a href="https://github.com/itsron-sys64/instafreak" target="_blank" class="nav-icon" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+          <path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2.1c-3.2.69-3.87-1.37-3.87-1.37-.52-1.32-1.28-1.67-1.28-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.7 1.25 3.36.95.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.27-5.24-5.66 0-1.25.45-2.27 1.18-3.07-.12-.29-.51-1.45.11-3.03 0 0 .96-.31 3.15 1.17.91-.25 1.89-.38 2.86-.39.97.01 1.95.14 2.86.39 2.19-1.48 3.15-1.17 3.15-1.17.62 1.58.23 2.74.11 3.03.74.8 1.18 1.82 1.18 3.07 0 4.4-2.69 5.37-5.25 5.65.41.35.78 1.05.78 2.12v3.15c0 .31.21.66.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/>
+        </svg>
+      </a>
+    </nav>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <div class="nav-overlay" id="navOverlay"></div>
+
+  <!-- HERO SECTION -->
+  <main class="hero">
+    <div class="hero-content">
+      <p class="eyebrow">✦ The Grand Reel Performer ✦</p>
+      <h1 class="hero-title">
+        <span class="title-small">Allow me,</span>
+        <span class="title-main">FuReelina</span>
+        <span class="title-small">to take the stage.</span>
+      </h1>
+
+      <p class="hero-sub">
+        Drop an Instagram Reel link into your Discord server and witness it played inline with theatrical flair. No clicks, no detours, just a magnificent performance every time.
+      </p>
+
+      <div class="hero-cta">
+        <a href="https://discord.com/oauth2/authorize?client_id=1494421582398095370&permissions=274878016512&integration_type=0&scope=bot" target="_blank" class="btn-primary">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026 13.83 13.83 0 0 0 1.226-1.963.074.074 0 0 0-.041-.104 13.175 13.175 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125 12.598 12.598 0 0 1-1.873.878.075.075 0 0 0-.041.105c.36.687.771 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"/>
+          </svg>
+          Add to your server
+        </a>
+        <a href="#about" class="btn-secondary">Learn more ↓</a>
+      </div>
+    </div>
+
+    <div class="hero-character" id="heroCharacter">
+      <img src="images/actionbg3.png" alt="Furina" class="char-img" />
+      <div class="char-glow"></div>
+    </div>
+  </main>
+
+  <!-- ABOUT SECTION -->
+  <section class="section" id="about">
+    <div class="section-inner">
+      <h2 class="section-title">What is FuReelina?</h2>
+      <p class="section-text">
+        A Discord bot with a flair for the dramatic. FuReelina watches your server for Instagram Reel links and graciously delivers them as inline video performances no broken previews, no ugly hyperlinks, only pure theatrical playback. <em>Sharing is caring, after all💙</em>.
+      </p>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section features-section" id="features">
+    <div class="section-inner">
+      <h2 class="section-title">A Performance Worth Remembering</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🎭</div>
+          <h3>Auto-Detection</h3>
+          <p>Paste any Instagram Reel link. FuReelina catches it before you can even blink.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎬</div>
+          <h3>Inline Playback</h3>
+          <p>Videos play directly in Discord with a native player. No tabs, no delays.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💙</div>
+          <h3>Privacy Respected</h3>
+          <p>No data stored, no logs kept. Reel comes in, plays, and vanishes from memory.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Always Online</h3>
+          <p>Hosted 24/7 so the grand Furina never misses a curtain call in your server.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUOTES -->
+  <section class="section quotes-section" id="quotes">
+    <div class="section-inner">
+      <h2 class="section-title">Words from the Archon Herself</h2>
+      <div class="quotes-grid">
+        <blockquote class="quote-card">
+          <p>"Oh, how positively <em>lucky</em> you are, to have the great Furina share your reels. Do cherish every moment of this performance!"</p>
+        </blockquote>
+        <blockquote class="quote-card">
+          <p>"Sharing is caring, my dear audience. And there is no one in all of Teyvat who cares quite like I do."</p>
+        </blockquote>
+        <blockquote class="quote-card">
+          <p>"Consider this my finest act yet of bringing joy, laughter, and just a sprinkle of chaos to your Discord server."</p>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section cta-section">
+    <div class="section-inner cta-inner">
+      <h2 class="cta-title">Ready for the grand show?</h2>
+      <p class="cta-sub">Invite FuReelina to your server and let the performances begin.</p>
+      <a href="https://discord.com/oauth2/authorize?client_id=1494421582398095370&permissions=274878016512&integration_type=0&scope=bot" target="_blank" class="btn-primary btn-large">
+        Add FuReelina to Discord
+      </a>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="images/logo.png" alt="FuReelina" />
+        <span>FuReelina</span>
+      </div>
+      <div class="footer-links">
+        <a href="tos.md" target="_blank">Terms of Service</a>
+        <a href="privacy.md" target="_blank">Privacy Policy</a>
+        <a href="https://github.com/itsron-sys64/instafreak" target="_blank">GitHub</a>
+      </div>
+      <p class="footer-disclaimer">
+        Not affiliated with Instagram, Meta, or HoYoverse. FuReelina is a fan project inspired by Furina from Genshin Impact.
+      </p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
