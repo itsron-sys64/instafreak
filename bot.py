@@ -98,6 +98,5 @@ async def on_message(message: discord.Message):
 if __name__ == "__main__":
     if not TOKEN:
         raise RuntimeError("Set the DISCORD_TOKEN environment variable.")
+    webserver.keep_alive()
     client.run(TOKEN)
-
-webserver.keep_alive()
