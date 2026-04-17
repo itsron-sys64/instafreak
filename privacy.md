@@ -26,4 +26,4 @@ ClipThread does not knowingly collect any information from users under the age o
 We may update this Privacy Policy at any time. Continued use of the bot constitutes acceptance of any changes.
 
 ## Contact
-For questions or concerns, contact us at: sarkar10000000@gmail.com
+For questions or concerns, contact us at: discord: @cinnamon.ron
