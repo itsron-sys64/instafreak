@@ -19,4 +19,4 @@ ClipThread is an independent project and is not affiliated with, endorsed by, or
 We reserve the right to discontinue or modify the service at any time without notice.
 
 ## Contact
-For questions or concerns, contact us at: sarkar10000000@gmail.com
+For questions or concerns, contact us at: Discord: @cinnamon.ron
