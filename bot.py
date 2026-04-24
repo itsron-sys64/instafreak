@@ -14,6 +14,14 @@ INSTA_PATTERN = re.compile(
     r"https?://(?:www\.)?instagram\.com/(?:reel|p|tv)/([A-Za-z0-9_-]+)/?[^\s]*"
 )
 
+TIKTOK_PATTERN = re.compile(
+    r"https?://(?:www\.|vm\.|vt\.|m\.)?tiktok\.com/[^\s]+"
+)
+
+
+def rewrite_tiktok(url: str) -> str:
+    return re.sub(r"(?:www\.|m\.)?tiktok\.com", "vxtiktok.com", url, count=1)
+
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
@@ -57,18 +65,29 @@ async def on_message(message: discord.Message):
     if message.author.bot:
         return
 
-    matches = list(INSTA_PATTERN.finditer(message.content))
-    if not matches:
+    insta_matches = list(INSTA_PATTERN.finditer(message.content))
+    tiktok_matches = list(TIKTOK_PATTERN.finditer(message.content))
+
+    if not insta_matches and not tiktok_matches:
         return
 
-    # Suppress Discord's broken Instagram embed
+    # Suppress Discord's broken default embeds
     try:
         await message.edit(suppress=True)
     except discord.Forbidden:
         pass
 
+    # TikTok: URL-rewrite via vxtiktok.com so Discord embeds inline natively.
+    # Works even for users in countries where TikTok is blocked.
+    for match in tiktok_matches:
+        rewritten = rewrite_tiktok(match.group(0))
+        await message.reply(rewritten, mention_author=False)
+
+    if not insta_matches:
+        return
+
     async with message.channel.typing():
-        for match in matches:
+        for match in insta_matches:
             shortcode = match.group(1)
 
             with tempfile.TemporaryDirectory() as tmpdir:
