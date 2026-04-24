@@ -19,8 +19,31 @@ TIKTOK_PATTERN = re.compile(
 )
 
 
-def rewrite_tiktok(url: str) -> str:
-    return re.sub(r"(?:www\.|m\.)?tiktok\.com", "vxtiktok.com", url, count=1)
+async def download_tiktok(url: str, tmpdir: str) -> str | None:
+    loop = asyncio.get_event_loop()
+
+    def _download():
+        try:
+            import yt_dlp
+            out_template = os.path.join(tmpdir, "tiktok.%(ext)s")
+            ydl_opts = {
+                "outtmpl": out_template,
+                "format": "mp4/best",
+                "quiet": True,
+                "no_warnings": True,
+                "noprogress": True,
+                "socket_timeout": 30,
+            }
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
+            videos = glob.glob(os.path.join(tmpdir, "tiktok.*"))
+            videos = [v for v in videos if v.endswith((".mp4", ".mov", ".webm"))]
+            return videos[0] if videos else None
+        except Exception as e:
+            print(f"[tiktok yt-dlp error] {e}")
+            return None
+
+    return await loop.run_in_executor(None, _download)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -77,16 +100,32 @@ async def on_message(message: discord.Message):
     except discord.Forbidden:
         pass
 
-    # TikTok: URL-rewrite via vxtiktok.com so Discord embeds inline natively.
-    # Works even for users in countries where TikTok is blocked.
-    for match in tiktok_matches:
-        rewritten = rewrite_tiktok(match.group(0))
-        await message.reply(rewritten, mention_author=False)
-
-    if not insta_matches:
-        return
-
     async with message.channel.typing():
+        for match in tiktok_matches:
+            tiktok_url = match.group(0)
+            with tempfile.TemporaryDirectory() as tmpdir:
+                file_path = await download_tiktok(tiktok_url, tmpdir)
+
+                if not file_path:
+                    await message.reply(
+                        "Could not download that TikTok. It may be private or region-locked.",
+                        mention_author=False,
+                    )
+                    continue
+
+                size_mb = os.path.getsize(file_path) / (1024 * 1024)
+                if size_mb > 25:
+                    await message.reply(
+                        f"TikTok is too large to upload ({size_mb:.1f} MB, Discord limit is 25 MB).",
+                        mention_author=False,
+                    )
+                    continue
+
+                await message.reply(
+                    file=discord.File(file_path, filename="tiktok.mp4"),
+                    mention_author=False,
+                )
+
         for match in insta_matches:
             shortcode = match.group(1)
 
