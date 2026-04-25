@@ -4,6 +4,7 @@ import os
 import asyncio
 import tempfile
 import glob
+import instaloader
 from dotenv import load_dotenv
 import webserver
 load_dotenv()
@@ -17,25 +18,14 @@ TIKTOK_PATTERN = re.compile(
     r"https?://(?:www\.|vm\.|vt\.|m\.)?tiktok\.com/[^\s]+"
 )
 
-MEDIA_EXTS = (".mp4", ".mov", ".webm", ".jpg", ".jpeg", ".png", ".webp", ".gif")
-DISCORD_FILE_LIMIT_MB = 25
-DISCORD_MAX_ATTACHMENTS = 10
 
-
-def _collect_media(tmpdir: str) -> list[str]:
-    files = []
-    for ext in MEDIA_EXTS:
-        files.extend(glob.glob(os.path.join(tmpdir, f"**/*{ext}"), recursive=True))
-    return sorted(files)
-
-
-async def download_tiktok(url: str, tmpdir: str) -> list[str]:
+async def download_tiktok(url: str, tmpdir: str) -> str | None:
     loop = asyncio.get_event_loop()
 
     def _download():
         try:
             import yt_dlp
-            out_template = os.path.join(tmpdir, "tiktok_%(playlist_index)s.%(ext)s")
+            out_template = os.path.join(tmpdir, "tiktok.%(ext)s")
             ydl_opts = {
                 "outtmpl": out_template,
                 "format": "mp4/best",
@@ -46,81 +36,46 @@ async def download_tiktok(url: str, tmpdir: str) -> list[str]:
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
-            return _collect_media(tmpdir)
+            videos = glob.glob(os.path.join(tmpdir, "tiktok.*"))
+            videos = [v for v in videos if v.endswith((".mp4", ".mov", ".webm"))]
+            return videos[0] if videos else None
         except Exception as e:
             print(f"[tiktok yt-dlp error] {e}")
-            return []
+            return None
 
     return await loop.run_in_executor(None, _download)
-
 
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
+L = instaloader.Instaloader(
+    download_videos=True,
+    download_video_thumbnails=False,
+    download_geotags=False,
+    download_comments=False,
+    save_metadata=False,
+    post_metadata_txt_pattern="",
+    filename_pattern="{shortcode}",
+    quiet=True,
+)
 
-async def download_instagram(url: str, tmpdir: str) -> list[str]:
+
+async def download_reel(shortcode: str, tmpdir: str) -> str | None:
     loop = asyncio.get_event_loop()
 
     def _download():
         try:
-            import yt_dlp
-            out_template = os.path.join(tmpdir, "ig_%(playlist_index)s.%(ext)s")
-            ydl_opts = {
-                "outtmpl": out_template,
-                "format": "mp4/best",
-                "quiet": True,
-                "no_warnings": True,
-                "noprogress": True,
-                "socket_timeout": 30,
-            }
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
-            return _collect_media(tmpdir)
+            post = instaloader.Post.from_shortcode(L.context, shortcode)
+            L.dirname_pattern = tmpdir
+            L.download_post(post, target=tmpdir)
+            videos = glob.glob(os.path.join(tmpdir, "**/*.mp4"), recursive=True)
+            return videos[0] if videos else None
         except Exception as e:
-            print(f"[instagram yt-dlp error] {e}")
-            return []
+            print(f"[instaloader error] {e}")
+            return None
 
     return await loop.run_in_executor(None, _download)
-
-
-def _chunk_for_discord(files: list[str]) -> tuple[list[list[str]], list[str]]:
-    """Split files into Discord-sendable batches and a list of skipped (too-large) files."""
-    batches: list[list[str]] = []
-    skipped: list[str] = []
-    current: list[str] = []
-    current_size_mb = 0.0
-    limit_bytes = DISCORD_FILE_LIMIT_MB * 1024 * 1024
-
-    for f in files:
-        size_mb = os.path.getsize(f) / (1024 * 1024)
-        if os.path.getsize(f) > limit_bytes:
-            skipped.append(f)
-            continue
-        if len(current) >= DISCORD_MAX_ATTACHMENTS or current_size_mb + size_mb > DISCORD_FILE_LIMIT_MB:
-            batches.append(current)
-            current = []
-            current_size_mb = 0.0
-        current.append(f)
-        current_size_mb += size_mb
-
-    if current:
-        batches.append(current)
-    return batches, skipped
-
-
-async def send_media(message: discord.Message, files: list[str]) -> None:
-    batches, skipped = _chunk_for_discord(files)
-    for batch in batches:
-        await message.reply(
-            files=[discord.File(f, filename=os.path.basename(f)) for f in batch],
-            mention_author=False,
-        )
-    if skipped:
-        await message.reply(
-            f"⚠️ {len(skipped)} item(s) skipped — larger than Discord's {DISCORD_FILE_LIMIT_MB} MB limit.",
-            mention_author=False,
-        )
 
 
 @client.event
@@ -139,6 +94,7 @@ async def on_message(message: discord.Message):
     if not insta_matches and not tiktok_matches:
         return
 
+    # Suppress Discord's broken default embeds
     try:
         await message.edit(suppress=True)
     except discord.Forbidden:
@@ -148,26 +104,53 @@ async def on_message(message: discord.Message):
         for match in tiktok_matches:
             tiktok_url = match.group(0)
             with tempfile.TemporaryDirectory() as tmpdir:
-                files = await download_tiktok(tiktok_url, tmpdir)
-                if not files:
+                file_path = await download_tiktok(tiktok_url, tmpdir)
+
+                if not file_path:
                     await message.reply(
                         "Could not download that TikTok. It may be private or region-locked.",
                         mention_author=False,
                     )
                     continue
-                await send_media(message, files)
 
-        for match in insta_matches:
-            insta_url = match.group(0)
-            with tempfile.TemporaryDirectory() as tmpdir:
-                files = await download_instagram(insta_url, tmpdir)
-                if not files:
+                size_mb = os.path.getsize(file_path) / (1024 * 1024)
+                if size_mb > 25:
                     await message.reply(
-                        "Could not download that post. It may be private.",
+                        f"TikTok is too large to upload ({size_mb:.1f} MB, Discord limit is 25 MB).",
                         mention_author=False,
                     )
                     continue
-                await send_media(message, files)
+
+                await message.reply(
+                    file=discord.File(file_path, filename="tiktok.mp4"),
+                    mention_author=False,
+                )
+
+        for match in insta_matches:
+            shortcode = match.group(1)
+
+            with tempfile.TemporaryDirectory() as tmpdir:
+                file_path = await download_reel(shortcode, tmpdir)
+
+                if not file_path:
+                    await message.reply(
+                        "Could not download that reel. It may be private.",
+                        mention_author=False,
+                    )
+                    continue
+
+                size_mb = os.path.getsize(file_path) / (1024 * 1024)
+                if size_mb > 25:
+                    await message.reply(
+                        f"Reel is too large to upload ({size_mb:.1f} MB, Discord limit is 25 MB).",
+                        mention_author=False,
+                    )
+                    continue
+
+                await message.reply(
+                    file=discord.File(file_path, filename="reel.mp4"),
+                    mention_author=False,
+                )
 
 
 if __name__ == "__main__":
