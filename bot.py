@@ -19,7 +19,8 @@ TIKTOK_PATTERN = re.compile(
 
 
 def rewrite_instagram(url: str) -> str:
-    return re.sub(r"(?:www\.)?instagram\.com", "ddinstagram.com", url, count=1)
+    clean = url.split("?")[0]
+    return re.sub(r"(?:www\.)?instagram\.com", "kkinstagram.com", clean, count=1)
 
 
 async def download_tiktok(url: str, tmpdir: str) -> str | None:
