@@ -4,7 +4,6 @@ import os
 import asyncio
 import tempfile
 import glob
-import instaloader
 from dotenv import load_dotenv
 import webserver
 load_dotenv()
@@ -59,29 +58,27 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
-L = instaloader.Instaloader(
-    download_videos=True,
-    download_video_thumbnails=False,
-    download_geotags=False,
-    download_comments=False,
-    save_metadata=False,
-    post_metadata_txt_pattern="",
-    filename_pattern="{shortcode}_{mediaid}",
-    quiet=True,
-)
 
-
-async def download_reel(shortcode: str, tmpdir: str) -> list[str]:
+async def download_instagram(url: str, tmpdir: str) -> list[str]:
     loop = asyncio.get_event_loop()
 
     def _download():
         try:
-            post = instaloader.Post.from_shortcode(L.context, shortcode)
-            L.dirname_pattern = tmpdir
-            L.download_post(post, target=tmpdir)
+            import yt_dlp
+            out_template = os.path.join(tmpdir, "ig_%(playlist_index)s.%(ext)s")
+            ydl_opts = {
+                "outtmpl": out_template,
+                "format": "mp4/best",
+                "quiet": True,
+                "no_warnings": True,
+                "noprogress": True,
+                "socket_timeout": 30,
+            }
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
             return _collect_media(tmpdir)
         except Exception as e:
-            print(f"[instaloader error] {e}")
+            print(f"[instagram yt-dlp error] {e}")
             return []
 
     return await loop.run_in_executor(None, _download)
@@ -161,9 +158,9 @@ async def on_message(message: discord.Message):
                 await send_media(message, files)
 
         for match in insta_matches:
-            shortcode = match.group(1)
+            insta_url = match.group(0)
             with tempfile.TemporaryDirectory() as tmpdir:
-                files = await download_reel(shortcode, tmpdir)
+                files = await download_instagram(insta_url, tmpdir)
                 if not files:
                     await message.reply(
                         "Could not download that post. It may be private.",
