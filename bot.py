@@ -23,23 +23,6 @@ def rewrite_instagram(url: str) -> str:
     return re.sub(r"(?:www\.)?instagram\.com", "kkinstagram.com", clean, count=1)
 
 
-async def is_instagram_public(url: str) -> bool:
-    """Pre-check if the kkinstagram URL will produce an embed.
-    Returns False for private / age-gated / removed posts."""
-    try:
-        timeout = aiohttp.ClientTimeout(total=10)
-        headers = {"User-Agent": "Mozilla/5.0 (compatible; Discordbot/2.0)"}
-        async with aiohttp.ClientSession(timeout=timeout, headers=headers) as session:
-            async with session.get(url, allow_redirects=True) as resp:
-                if resp.status != 200:
-                    return False
-                html = await resp.text()
-                return 'og:video' in html or 'og:image' in html
-    except Exception as e:
-        print(f"[ig precheck error] {e}")
-        return False
-
-
 async def download_tiktok(url: str, tmpdir: str) -> str | None:
     loop = asyncio.get_event_loop()
 
@@ -94,10 +77,11 @@ async def on_message(message: discord.Message):
     except discord.Forbidden:
         pass
 
-for match in insta_matches:
+    # Instagram: URL-rewrite via kkinstagram.com so Discord embeds inline natively.
+    # If Discord fails to fetch an embed within 3s, edit the reply to show an error.
+    for match in insta_matches:
         rewritten = rewrite_instagram(match.group(0))
         sent = await message.reply(rewritten, mention_author=False)
-        # Ghhhahahahahahaahah weefhiuwhd wuf HEHEHEHEHEHEHE NOW WE WAIT HERE FOR THE CHECK
         await asyncio.sleep(3)
         try:
             refreshed = await message.channel.fetch_message(sent.id)
@@ -107,7 +91,7 @@ for match in insta_matches:
                 )
         except Exception as e:
             print(f"[ig embed verify error] {e}")
-            
+
     if not tiktok_matches:
         return
 
