@@ -4,7 +4,6 @@ import os
 import asyncio
 import tempfile
 import glob
-import aiohttp
 from dotenv import load_dotenv
 import webserver
 load_dotenv()
@@ -95,17 +94,20 @@ async def on_message(message: discord.Message):
     except discord.Forbidden:
         pass
 
-    # Instagram: URL-rewrite via kkinstagram.com so Discord embeds inline natively.
-    for match in insta_matches:
+for match in insta_matches:
         rewritten = rewrite_instagram(match.group(0))
-        if not await is_instagram_public(rewritten):
-            await message.reply(
-                "Could not embed that post. It may be private, age-restricted, or removed.",
-                mention_author=False,
-            )
-            continue
-        await message.reply(rewritten, mention_author=False)
-
+        sent = await message.reply(rewritten, mention_author=False)
+        # Ghhhahahahahahaahah weefhiuwhd wuf HEHEHEHEHEHEHE NOW WE WAIT HERE FOR THE CHECK
+        await asyncio.sleep(3)
+        try:
+            refreshed = await message.channel.fetch_message(sent.id)
+            if not refreshed.embeds:
+                await sent.edit(
+                    content="❌ Could not embed that post. It may be private, age-restricted, or removed."
+                )
+        except Exception as e:
+            print(f"[ig embed verify error] {e}")
+            
     if not tiktok_matches:
         return
 
