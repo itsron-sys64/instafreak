@@ -4,6 +4,7 @@ import os
 import asyncio
 import tempfile
 import glob
+import aiohttp
 from dotenv import load_dotenv
 import webserver
 load_dotenv()
@@ -21,6 +22,23 @@ TIKTOK_PATTERN = re.compile(
 def rewrite_instagram(url: str) -> str:
     clean = url.split("?")[0]
     return re.sub(r"(?:www\.)?instagram\.com", "kkinstagram.com", clean, count=1)
+
+
+async def is_instagram_public(url: str) -> bool:
+    """Pre-check if the kkinstagram URL will produce an embed.
+    Returns False for private / age-gated / removed posts."""
+    try:
+        timeout = aiohttp.ClientTimeout(total=10)
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; Discordbot/2.0)"}
+        async with aiohttp.ClientSession(timeout=timeout, headers=headers) as session:
+            async with session.get(url, allow_redirects=True) as resp:
+                if resp.status != 200:
+                    return False
+                html = await resp.text()
+                return 'og:video' in html or 'og:image' in html
+    except Exception as e:
+        print(f"[ig precheck error] {e}")
+        return False
 
 
 async def download_tiktok(url: str, tmpdir: str) -> str | None:
@@ -77,9 +95,15 @@ async def on_message(message: discord.Message):
     except discord.Forbidden:
         pass
 
-    # Instagram: URL-rewrite via ddinstagram.com so Discord embeds inline natively.
+    # Instagram: URL-rewrite via kkinstagram.com so Discord embeds inline natively.
     for match in insta_matches:
         rewritten = rewrite_instagram(match.group(0))
+        if not await is_instagram_public(rewritten):
+            await message.reply(
+                "Could not embed that post. It may be private, age-restricted, or removed.",
+                mention_author=False,
+            )
+            continue
         await message.reply(rewritten, mention_author=False)
 
     if not tiktok_matches:
