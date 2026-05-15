@@ -82,7 +82,7 @@ async def on_message(message: discord.Message):
     for match in insta_matches:
         rewritten = rewrite_instagram(match.group(0))
         sent = await message.reply(rewritten, mention_author=False)
-        await asyncio.sleep(3)
+        await asyncio.sleep(8)
         try:
             refreshed = await message.channel.fetch_message(sent.id)
             if not refreshed.embeds:
