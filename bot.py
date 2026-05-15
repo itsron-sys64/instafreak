@@ -77,8 +77,7 @@ async def on_message(message: discord.Message):
     except discord.Forbidden:
         pass
 
-    # Instagram: URL-rewrite via kkinstagram.com so Discord embeds inline natively.
-    # If Discord fails to fetch an embed within 3s, edit the reply to show an error.
+ 
     for match in insta_matches:
         rewritten = rewrite_instagram(match.group(0))
         sent = await message.reply(rewritten, mention_author=False)
@@ -87,7 +86,7 @@ async def on_message(message: discord.Message):
             refreshed = await message.channel.fetch_message(sent.id)
             if not refreshed.embeds:
                 await sent.edit(
-                    content="❌ Could not embed that post. It may be private, age-restricted, or removed."
+                    content="❄️ Could not embed that post. It may be private, age-restricted, or removed."
                 )
         except Exception as e:
             print(f"[ig embed verify error] {e}")
