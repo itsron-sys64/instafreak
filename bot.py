@@ -8,7 +8,8 @@ load_dotenv()
 TOKEN = os.environ.get("DISCORD_TOKEN")
 
 INSTA_PATTERN = re.compile(
-    r"https?://(?:www\.)?instagram\.com/(?:reel|p|tv)/([A-Za-z0-9_-]+)/?[^\s]*"
+    r"https?://(?:www\.)?instagram\.com/(?:reel|reels|p)/[^\s]+",
+    re.IGNORECASE,
 )
 
 TIKTOK_PATTERN = re.compile(
@@ -17,8 +18,7 @@ TIKTOK_PATTERN = re.compile(
 
 
 def rewrite_instagram(url: str) -> str:
-    clean = url.split("?")[0]
-    return re.sub(r"(?:www\.)?instagram\.com", "kkinstagram.com", clean, count=1)
+    return re.sub(r"(?:www\.)?instagram\.com", "kkinstagram.com", url, count=1)
 
 
 def rewrite_tiktok(url: str) -> str:
@@ -34,7 +34,7 @@ client = discord.Client(intents=intents)
 async def post_with_embed_check(message: discord.Message, rewritten_url: str, error_text: str):
     """Reply with the rewritten URL, then edit it to an error if Discord doesn't embed."""
     sent = await message.reply(rewritten_url, mention_author=False)
-    await asyncio.sleep(15)
+    await asyncio.sleep(5)
     try:
         refreshed = await message.channel.fetch_message(sent.id)
         if not refreshed.embeds:
@@ -53,7 +53,7 @@ async def on_message(message: discord.Message):
     if message.author.bot:
         return
 
-    insta_matches = list(INSTA_PATTERN.finditer(message.content))
+    insta_matches = INSTA_PATTERN.findall(message.content)
     tiktok_matches = list(TIKTOK_PATTERN.finditer(message.content))
 
     if not insta_matches and not tiktok_matches:
@@ -66,7 +66,7 @@ async def on_message(message: discord.Message):
         pass
 
     for match in insta_matches:
-        rewritten = rewrite_instagram(match.group(0))
+        rewritten = rewrite_instagram(match)
         await post_with_embed_check(
             message,
             rewritten,
